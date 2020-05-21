@@ -2,6 +2,31 @@
 
 
 
+hey guys so the server is redis
+
+you gotta
+brew install wget
+
+wget http://download.redis.io/redis-stable.tar.gz
+tar xvzf redis-stable.tar.gz
+cd redis-stable
+make
+
+brew install redis
+follow instructions
+
+then somewhere there:
+npm install
+
+then to run: redis-server
+and in another terminal: node app.js
+
+localhost:8080 in your browser for client side
+localhost:8080/adminURL for admin side
+
+
+
+
 ## Live Demo ##
 
 [Customer](https://www.cronj.com:8082/)
