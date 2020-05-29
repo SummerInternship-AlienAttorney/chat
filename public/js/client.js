@@ -100,7 +100,7 @@ socket.on('chat message', function(data) {
 
 socket.on('typing', function(data) {
 	if (data.isTyping && data.person != 'Client')
-		$Typing.append("CronJ is typing...");
+		$Typing.append("Admin is typing...");
 	else
 		$Typing.text('');
 });

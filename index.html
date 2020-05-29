@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <h1>Sample Website</h1>
+
+    <div id="Chat"/>
+    <script src="chat.js"></script>
+    <script src="app.js"></script>
+    <script src="config.js"></script>
+    <script src="js/client.js"></script>
+    <script>
+        Chat.default.init({
+            selector: "#cat",
+            initPayload: "/get_started",
+            customData: {"language": "en"}, // arbitrary custom data. Stay minimal as this will be added to the socket
+            socketUrl: "http://localhost:8080",
+            socketPath: "/socket.io/",
+            title: "ChatTitle",
+            subtitle: "Subtitle",
+    })
+    </script>
+    <script>dbFunctions.ConnectToRedis(startApp);</script>
+
+</body>
+
+</html>

@@ -10,6 +10,22 @@ var config = require('./config');
 var mail = require('./mail');	//Configure mail.js and un-comment the mail code
 var btoa = require('btoa');		//Password is btoa hashed 
 
+
+var botT = require('./data_js/botTriggers');
+var botR = require('./data_js/botResponses');
+var chatbotProfessional = require('./data_js/chatbot-professional');
+var chatbotFriendly = require('./data_js/chatbot-friendly');
+var chatbotCaring = require('./data_js/chatbot-caring');
+var chatbotWitty = require('./data_js/chatbot-witty');
+var qa1 = require('./data_js/qa1');
+var smalltalkQs = require('./data_js/smalltalkquestions');
+var smalltalkRs = require('./data_js/smalltalkresponses');
+
+
+// bot can do math
+const re = /(?:(?:^|[-+_*/])(?:\s*-?\d+(\.\d+)?(?:[eE][+-]?\d+)?\s*))+$/;
+
+
 var admins = {};
 var users = {};
 
@@ -98,7 +114,6 @@ io.on('connection', function(socket) {
 			data.roomID = uuid.v4();
 			dbFunctions.setDetails(data);
 			socket.emit("roomID", data.roomID);
-			socket.emit('log message', "test 5");
 		}
 		socket.roomID = data.roomID;
 		//Fetch user details
@@ -127,8 +142,11 @@ io.on('connection', function(socket) {
 				});
 				if (Object.keys(admins).length == 0) {
 					//Tell user he will be contacted asap and send admin email
-					socket.emit('log message', "Thank you for reaching us." +
-						" Please leave your message here and we will get back to you shortly.");
+					
+					// socket.emit('log message', "Thank you for reaching us." +
+					// 	" Please leave your message here and we will get back to you shortly.");
+					socket.emit('log message', "Hi, this is bot." +
+						" How can I help you today?");
 					/*mail.alertMail();*/
 				} else {
 					
@@ -145,7 +163,7 @@ io.on('connection', function(socket) {
 							})
 						});
 					}
-					else socket.emit('log message', "Welcome " + socket.userDetails[0] + ", How help ");
+					else socket.emit('log message', "Welcome back " + socket.userDetails[0] + ", How help ");
 				}
 			})
 			.catch(function(error) {
@@ -170,6 +188,164 @@ io.on('connection', function(socket) {
 		dbFunctions.pushMessage(data);
 
 		socket.broadcast.to(data.roomID).emit('chat message', data);
+
+		// console.log(Object.getOwnPropertyNames(data));
+
+		var adminBot = {
+			roomID : data.roomID,
+			timestamp : data.timestamp,
+			isAdmin : true,
+			msg : ""
+		};
+		
+		var gotResponse = false;
+
+
+		// hard coded section
+		// anything in array is a substring of msg
+		//bot.greetings.includes(data.msg.toLowerCase())
+		if (botT.greetings.includes(data.msg.toLowerCase())) {
+			adminBot.msg = botR.greetings[Math.floor(Math.random() * botR.greetings.length)];
+			adminBot.msg = adminBot.msg.charAt(0).toUpperCase() + adminBot.msg.slice(1);
+			gotResponse = true;
+		}
+
+		else if (botT.bye.some(v => data.msg.toLowerCase().includes(v))) {
+			adminBot.msg = botR.greetings[Math.floor(Math.random() * botR.greetings.length)];
+			gotResponse = true;
+		}
+		else if (botT.thanks.some(v => data.msg.toLowerCase().includes(v))) {
+			adminBot.msg = botR.thanks[Math.floor(Math.random() * botR.thanks.length)];
+			gotResponse = true;
+		}
+
+
+		// smalltalk questions and responses
+		if (!gotResponse) {
+			for (i = 0; i < smalltalkQs.length; i++) {
+				if (smalltalkQs[i].Question.toLowerCase().includes(data.msg.toLowerCase())) {
+						console.log("here");
+						console.log(smalltalkQs[i].Question.toLowerCase().includes(data.msg.toLowerCase()))
+						console.log(data.msg.toLowerCase().includes(smalltalkQs[i].Question.toLowerCase()) )
+						console.log(smalltalkQs[i].Question.toLowerCase())
+					
+
+					var answers = smalltalkRs[smalltalkQs[i].Answer];
+
+					console.log(smalltalkQs[i].Answer);
+					console.log(answers);
+
+					adminBot.msg = answers[Math.floor(Math.random() * answers.length)];
+					gotResponse = true;
+					break;
+				}
+			}
+		}
+
+		//bot does math //issue: parentheses calculations and question marks
+		if (!gotResponse) {
+			if (re.test(data.msg)) {
+				var exp = data.msg.replace(/[^\d-+*/]/g,'');
+				console.log(exp);
+				adminBot.msg = eval(exp);
+				gotResponse = true;
+			}
+		}
+
+
+		
+		// conversational chatbot responses from Microsoft
+		// https://github.com/Microsoft/BotBuilder-PersonalityChat/tree/master/CSharp/Datasets
+		// only examine if the basics were not met
+		if (!gotResponse) {
+			for (i = 0; i < chatbotProfessional.length; i++) {
+				if (chatbotProfessional[i].Question.toLowerCase().includes(data.msg.toLowerCase())) {
+
+					adminBot.msg = chatbotProfessional[i].Answer;
+					gotResponse = true;
+					console.log("Professional");
+					break;
+				}
+			}
+		}
+		if (!gotResponse) {
+			for (i = 0; i < chatbotFriendly.length; i++) {
+				if (chatbotFriendly[i].Question.toLowerCase().includes(data.msg.toLowerCase())) {
+
+					adminBot.msg = chatbotFriendly[i].Answer;
+					gotResponse = true;
+					break;
+				}
+			}
+		}		
+		if (!gotResponse) {
+			for (i = 0; i < chatbotCaring.length; i++) {
+				if (chatbotCaring[i].Question.toLowerCase().includes(data.msg.toLowerCase()) ) {
+				//	||  data.msg.toLowerCase().includes(chatbotCaring[i].Question.toLowerCase()) ) {
+
+					adminBot.msg = chatbotCaring[i].Answer;
+					gotResponse = true;
+					break;
+				}
+			}
+		}
+		if (!gotResponse) {
+			for (i = 0; i < chatbotWitty.length; i++) {
+				if (chatbotWitty[i].Question.toLowerCase().includes(data.msg.toLowerCase()) ) {
+
+					adminBot.msg = chatbotWitty[i].Answer;
+					gotResponse = true;
+					break;
+				}
+			}
+		}
+
+
+
+		// first q and a dataset wikipedia
+		if (!gotResponse) {
+			for (i = 0; i < qa1.length; i++) {
+				if (qa1[i].Question.toLowerCase().includes(data.msg.toLowerCase()) 
+					||  data.msg.toLowerCase().includes(qa1[i].Question.toLowerCase()) ) {
+
+					adminBot.msg = qa1[i].Answer;
+					gotResponse = true;
+					break;
+				}
+			}
+		}
+
+		console.log(gotResponse);
+		// hardcoded customer service style questions
+		if (!gotResponse) {
+			if (botT.contact.some(v => data.msg.toLowerCase().includes(v))) {
+				adminBot.msg += " " + botR.contact[0];
+				gotResponse = true;
+			}
+	
+			if (botT.faq.some(v => data.msg.toLowerCase().includes(v))) {
+				adminBot.msg += botR.faq[0];
+				gotResponse = true;
+			}
+		}
+		
+		
+
+		// only chat from adminBot if no admin is logged in
+		if (Object.keys(admins).length == 0) {
+			if (adminBot.msg != "") {
+
+				//add delay so chatbot seems more real
+				setTimeout(() => {
+					socket.emit('chat message', adminBot);
+				   }, 1000);
+				
+				dbFunctions.pushMessage(adminBot);
+			}			
+		}
+		
+		// socket.emit('log message', data.msg);
+		// socket.emit('log message', socket.history[0]);
 	});
 
 	socket.on("typing", function(data) {
